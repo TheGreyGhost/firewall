@@ -1,0 +1,61 @@
+Basic design ideas:
+
+Use ebtables to filter traffic based on ip and MAC
+Use ebtables to log DNS requests- source, dest, query  (outgoing, ingoing, or both?
+use crontab to update ebtable rules based on time and updates to block/unblock:
+1) check owner: if blocked/unblocked, apply.  Else,
+2) check client: if blocked/unblocked, apply.  Else,
+3) check timetable.  If whitelist, check whitelist IPs.
+
+ebtables should log to tmp :
+DNS requests
+dropped clients (MAC)
+outgoing requests (MAC, dest IP, dest port) 
+
+crontab every minute:
+review log, update a tmp db with a summary of requests and time.
+When the tmp db reaches size limit, write to permanent db (purge records older than a given time, append new)
+
+table for clients
+MAC : IP : name : owner : status : time
+owner is linked to owner table  
+status is
+  ok
+  blocked until {time}
+  unblocked until {time}
+ 
+table for owner
+name : status : time : timetable
+name is eg
+  guest
+  unrestricted
+  unknown
+  john
+  mary
+status is
+  ok
+  blocked until {time}
+  unblocked until {time}
+  following timetable {timetable}
+
+table for timetable
+timetablename : access : day (mtwtfss) : starttime : endtime
+access is 'full' (any IP) or 'whitelist'
+
+table for dnstable
+IP : address
+
+how to handle unknown MAC?
+handle as "unknown" rules
+
+table for whitelist IP
+
+questions -
+how to allow owner to start/stop their own time?
+how to record duration of time spent?
+how to prevent caching up of manga?
+
+
+
+
+
