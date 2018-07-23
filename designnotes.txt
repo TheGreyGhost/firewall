@@ -55,6 +55,10 @@ how to allow owner to start/stop their own time?
 how to record duration of time spent?
 how to prevent caching up of manga?
 
+-----------
+23 Jul 2018
+Step 1:
+Write function to look up a MAC and get the access rights for it based on the current time
 
 
 
