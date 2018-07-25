@@ -7,6 +7,10 @@ use crontab to update ebtable rules based on time and updates to block/unblock:
 2) check client: if blocked/unblocked, apply.  Else,
 3) check timetable.  If whitelist, check whitelist IPs.
 
+If client or owner status is blocked until or unblocked until, and the time has expired, then revert to:
+1) default if timetable is null
+2) timetable if timetable is not null
+
 ebtables should log to tmp :
 DNS requests
 dropped clients (MAC)
@@ -17,13 +21,14 @@ review log, update a tmp db with a summary of requests and time.
 When the tmp db reaches size limit, write to permanent db (purge records older than a given time, append new)
 
 table for clients
-MAC : IP : name : owner : status : time
+MAC : IP : name : owner : status : time : timetable
 owner is linked to owner table  
 status is
-  ok
+  default
   blocked until {time}
   unblocked until {time}
- 
+  following timetable {timetable}
+
 table for owner
 name : status : time : timetable
 name is eg
@@ -33,7 +38,7 @@ name is eg
   john
   mary
 status is
-  ok
+  default
   blocked until {time}
   unblocked until {time}
   following timetable {timetable}

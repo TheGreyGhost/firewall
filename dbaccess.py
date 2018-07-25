@@ -3,10 +3,14 @@ import mysql.connector
 from mysql.connector import errorcode
 import errorhandler
 from errorhandler import DatabaseError
+import time
+
 
 class DBaccess:
     db = None
     cursor = None
+    UNKNOWN_MAC_OWNER_NAME = 'unknown'
+    DEFAULT_ACCESS = False                  # if the access tables say "Default" then this is the access granted
 
     def __init__(self, username="testreadonly", dbpassword=None,
                  host="localhost", port="8889", dbname="testfirewall"):
@@ -46,17 +50,79 @@ class DBaccess:
         if not self.db is None:
             self.db.close()
 
-    def getaccess(self, macaddress):
+    def getaccess(self, macaddress, timenow):
+        """  Returns the current access for the given MAC address at the given time
+
+        :param macaddress: in the format 08:60:6e:42:f0:fb
+        :param timenow: timestamp
+        :return: true if the MAC currently has access, false otherwise
+        :raises: DatabaseError
+        """
+
+#        Logic:
+#            1) check owner: if blocked/unblocked, apply.  Else,
+#            2) check client: if blocked/unblocked, apply.  Else,
+#            3) check timetable.  TODO: If whitelist, check whitelist IPs.
+
         if self.db is None or self.cursor is None:
             raise DatabaseError("Not connected to a database")
 
-        # Use all the SQL you like
-        self.cursor.execute("SELECT * FROM clients")
+        self.cursor.execute("SELECT * FROM qryClientAccess WHERE MAC='{}'".format(macaddress))
 
-        # print all the first cell of all the rows
-        for row in self.cursor.fetchall():
-            print(row[0])
+        row = self.cursor.fetchone()
+        if row is None:                 # don't know this MAC.  use reserved entry in owners table: unknown
+            self.cursor.execute("SELECT * FROM owners WHERE name='{}'".format(self.UNKNOWN_MAC_OWNER_NAME))
+            row = self.cursor.fetchone()
+            if row is None:
+                raise DatabaseError("unknown MAC default owner {} not found in database".format(self.UNKNOWN_MAC_OWNER_NAME))
 
+
+        else:
+            while row is not None:
+                print(row)
+                row = cursor.fetchone()
+
+            # print all the first cell of all the rows
+            for row in self.cursor.fetchall():
+                print(row[0])
+
+
+    def checkowner(self, ownerstatus, ownerendtime, timenow, timetable):
+        """ Check if the named owner has access or not.
+
+        :param ownerstatus: the status of the owner ('Default','BlockedUntil','UnblockedUntil','Timetable')
+        :param ownerendtime: for 'BlockedUntil' or 'UnblockedUntil', the end time of the status, in string format
+                                2018-07-20 20:41:48
+        :param timenow: the current time in Python time format
+        :param timetable: the name of the timetable to be applied (Null = no timetable)
+        :return: true if access is permitted
+
+        """
+
+    #        Logic:
+    #            1) if blocked/unblocked and time hasn't expired, apply it, otherwise fall back to timetable or default
+        if ownerstatus == "BlockedUntil" or ownerstatus == "UnblockedUntil":
+            timevalid = False
+            try:
+                ownerendtimestruct = time.strptime(ownerendtime, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                errorhandler.logerror(DatabaseError("endtime {} did not match expected format 2018-07-20 20:41:48".format(ownerendtime)))
+            finally:
+                timevalid = (timenow < ownerendtime)
+
+            if timevalid:
+                return False if ownerstatus == "BlockedUntil" else True
+
+            ownerstatus2 = "Default" if timetable is None else "Timetable"
+        else:
+            ownerstatus2 = ownerstatus
+
+        if ownerstatus2 == "Default":
+            return self.DEFAULT_ACCESS
+        elif ownerstatus2 == "Timetable":
+            #TODO look up timetable
+        else:
+            raise(DatabaseError("Invalid ownerstatus:{}".format(ownerstatus)))
 
     def testconnection(self, sqlstring="SELECT * FROM clients LIMIT 3"):
         if self.db is None or self.cursor is None:
