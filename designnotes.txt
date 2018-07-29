@@ -20,7 +20,7 @@ table for clients
 MAC : IP : name : owner : status : time
 owner is linked to owner table  
 status is
-  ok
+  Default
   blocked until {time}
   unblocked until {time}
  
@@ -33,7 +33,7 @@ name is eg
   john
   mary
 status is
-  ok
+  Default
   blocked until {time}
   unblocked until {time}
   following timetable {timetable}
@@ -55,7 +55,10 @@ how to allow owner to start/stop their own time?
 how to record duration of time spent?
 how to prevent caching up of manga?
 
-
+-------------
+SELECT clients.MAC, clients.status as clientstatus, clients.endtime as clientendtime, 
+owners.status as ownerstatus, owners.time as ownerendtime, owners.timetable
+FROM clients LEFT JOIN owners on clients.owner = owners.name
 
 
 
