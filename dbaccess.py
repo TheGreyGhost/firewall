@@ -80,20 +80,20 @@ class DBaccess:
 
         # if we don't know this MAC, or the device has no owner, use reserved entry in owners table: unknown
         clientrow = self.cursor.fetchone()
-        if clientrow is None or clientrow.owner is None:
+        if clientrow is None or clientrow.ownerstatus is None:
             ownername = self.UNKNOWN_MAC_OWNER_NAME
             self.cursor.execute("SELECT * FROM owners WHERE name='{}'".format(ownername))
             ownerrow = self.cursor.fetchone()
             if ownerrow is None:
                 raise DatabaseError("'unknown' owner {} not found in database".format(ownername))
-            owneraccess = self.checkowner(ownerrow.status, ownerrow.endtime, time.time(), ownerrow.timetable)
+            owneraccess = self.checkowner(ownerrow.status, ownerrow.endtime, timenow, ownerrow.timetable)
             if clientrow is None:
                 return owneraccess[0]
         else:
-            owneraccess = self.checkclient(clientrow.ownerstatus, clientrow.ownerendtime, time.time(),
+            owneraccess = self.checkowner(clientrow.ownerstatus, clientrow.ownerendtime, timenow,
                                            clientrow.ownertimetable)
 
-        clientaccess = self.checkclient(clientrow.clientstatus, clientrow.clientendtime, time.time(), clientrow.clienttimetable)
+        clientaccess = self.checkclient(clientrow.clientstatus, clientrow.clientendtime, timenow, clientrow.clienttimetable)
         return owneraccess[0] if owneraccess[1] < clientaccess[1] else clientaccess[0]
 
     def checkclient(self, clientstatus, clientendtime, timenow, timetable):

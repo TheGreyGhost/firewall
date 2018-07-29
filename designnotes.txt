@@ -69,3 +69,9 @@ FROM clients LEFT JOIN owners on clients.owner = owners.name
 Step 1:
 Write function to look up a MAC and get the access rights for it based on the current time
 
+tests for getaccess:
+1) MAC with owner that is blocked and device that is unblocked.  Repeat for time elapsed
+2) MAC with owner that is unblocked, and device that is blocked.  Repeat for time elapsed.
+3) unknown MAC - 'unknown' is unblocked until xxx. Repeat for time elapsed
+4) known device with NULL owner.  As per 3.
+
