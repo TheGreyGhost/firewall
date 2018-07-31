@@ -3,8 +3,7 @@ import mysql.connector
 from mysql.connector import errorcode
 import errorhandler
 from errorhandler import DatabaseError
-import time
-
+import datetime
 
 class DBaccess:
     db = None
@@ -57,11 +56,11 @@ class DBaccess:
         if not self.db is None:
             self.db.close()
 
-    def getaccess(self, macaddress, timenow):
+    def getaccess(self, macaddress, datetimenow):
         """  Returns the current access for the given MAC address at the given time
 
         :param macaddress: in the format 08:60:6e:42:f0:fb
-        :param timenow: timestamp
+        :param datetimenow: current date+time (datetime object)
         :return: true if the MAC currently has access, false otherwise
         :raises: DatabaseError
         """
@@ -86,41 +85,32 @@ class DBaccess:
             ownerrow = self.cursor.fetchone()
             if ownerrow is None:
                 raise DatabaseError("'unknown' owner {} not found in database".format(ownername))
-            owneraccess = self.checkowner(ownerrow.status, ownerrow.endtime, timenow, ownerrow.timetable)
+            owneraccess = self.checkowner(ownerrow.status, ownerrow.endtime, datetimenow, ownerrow.timetable)
             if clientrow is None:
                 return owneraccess[0]
         else:
-            owneraccess = self.checkowner(clientrow.ownerstatus, clientrow.ownerendtime, timenow,
+            owneraccess = self.checkowner(clientrow.ownerstatus, clientrow.ownerendtime, datetimenow,
                                            clientrow.ownertimetable)
 
-        clientaccess = self.checkclient(clientrow.clientstatus, clientrow.clientendtime, timenow, clientrow.clienttimetable)
+        clientaccess = self.checkclient(clientrow.clientstatus, clientrow.clientendtime, datetimenow, clientrow.clienttimetable)
         return owneraccess[0] if owneraccess[1] < clientaccess[1] else clientaccess[0]
 
-    def checkclient(self, clientstatus, clientendtime, timenow, timetable):
+    def checkclient(self, clientstatus, clientendtime, datetimenow, timetable):
         """ Check if the named client has access or not.
 
         :param clientstatus: the status of the owner ('Default','BlockedUntil','UnblockedUntil','Timetable')
-        :param clientendtime: for 'BlockedUntil' or 'UnblockedUntil', the end time of the status, in string format
-                                2018-07-20 20:41:48
-        :param timenow: the current time in Python time format
+        :param clientendtime: for 'BlockedUntil' or 'UnblockedUntil', the end time of the status, in datetime
+        :param datetimenow: the current date+time (datetime object)
         :param timetable: the name of the timetable to be applied (Null = no timetable)
         :returns a tuple: (access, priority) where access==true if access is permitted, and blocking priority:
-        :raises ValueError, DatabaseError
+        :raises DatabaseError
         """
 
         #        Logic:
         #            1) if blocked/unblocked and time hasn't expired, apply it, otherwise fall back to timetable or default
         if clientstatus == "BlockedUntil" or clientstatus == "UnblockedUntil":
-            timevalid = False
-            try:
-                clientendtimestruct = time.strptime(clientendtime, "%Y-%m-%d %H:%M:%S")
-            except ValueError:
-                errorhandler.logerror(
-                    DatabaseError("endtime {} did not match expected format 2018-07-20 20:41:48".format(clientendtime)))
-            else:
-                timevalid = (timenow < clientendtimestruct)
 
-            if timevalid:
+            if (datetimenow < clientendtime):
                 return (False, self.BLOCKING_PRIORITY_CLIENT_EXPLICIT) if clientstatus == "BlockedUntil" \
                     else (True, self.BLOCKING_PRIORITY_CLIENT_EXPLICIT)
 
@@ -138,33 +128,24 @@ class DBaccess:
             raise (DatabaseError("Invalid clientstatus:{}".format(clientstatus)))
 
 
-    def checkowner(self, ownerstatus, ownerendtime, timenow, timetable):
+    def checkowner(self, ownerstatus, ownerendtime, datetimenow, timetable):
         """ Check if the named owner has access or not.
 
         :param ownerstatus: the status of the owner ('Default','BlockedUntil','UnblockedUntil','Timetable')
-        :param ownerendtime: for 'BlockedUntil' or 'UnblockedUntil', the end time of the status, in string format
-                                2018-07-20 20:41:48
-        :param timenow: the current time in Python time format
+        :param ownerendtime: for 'BlockedUntil' or 'UnblockedUntil', the end time of the status, in datetime format
+        :param datetimenow: the current date+time (datetime object)
         :param timetable: the name of the timetable to be applied (Null = no timetable)
         :returns a tuple: (access, priority) where access==true if access is permitted, and blocking priority:
-        :raises ValueError, DatabaseError
+        :raises DatabaseError
         """
 
     #        Logic:
     #            1) if blocked/unblocked and time hasn't expired, apply it, otherwise fall back to timetable or default
         if ownerstatus == "BlockedUntil" or ownerstatus == "UnblockedUntil":
             timevalid = False
-            try:
-                ownerendtimestruct = time.strptime(ownerendtime, "%Y-%m-%d %H:%M:%S")
-            except ValueError:
-                errorhandler.logerror(DatabaseError("endtime {} did not match expected format 2018-07-20 20:41:48".format(ownerendtime)))
-            else:
-                timevalid = (timenow < ownerendtimestruct)
-
-            if timevalid:
+            if (datetimenow < ownerendtime):
                 return (False, self.BLOCKING_PRIORITY_OWNER_EXPLICIT) if ownerstatus == "BlockedUntil" \
                                                                       else (True, self.BLOCKING_PRIORITY_OWNER_EXPLICIT)
-
             ownerstatus2 = "Default" if timetable is None else "Timetable"
         else:
             ownerstatus2 = ownerstatus
