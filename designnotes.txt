@@ -75,3 +75,5 @@ tests for getaccess:
 3) unknown MAC - 'unknown' is unblocked until xxx. Repeat for time elapsed
 4) known device with NULL owner.  As per 3.
 
+Step 2:
+ebtables rules generator to generate appropriate rules for all database entries

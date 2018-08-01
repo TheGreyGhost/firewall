@@ -1,0 +1,29 @@
+***********************************************************
+#!/bin/bash
+###############################################################
+# EBTables test script
+###############################################################
+# Binaries
+
+EBTABLES=/sbin/ebtables
+###############################################################
+# Interface names
+
+INSIDE_IF_NAME=enxa0cec81d71e2
+OUTSIDE_IF_NAME=enxb827eb8cefb8
+BRIDGE_IF_NAME=br0
+
+###############################################################
+# Set default policy
+#
+
+$EBTABLES --init-table
+
+
+$EBTABLES -P INPUT ACCEPT
+$EBTABLES -P OUTPUT ACCEPT
+$EBTABLES -P FORWARD DROP
+# clear existing tables
+$EBTABLES -F
+$EBTABLES -t nat -F
+$EBTABLES -t broute -F

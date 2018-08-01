@@ -1,6 +1,7 @@
 import unittest
 from dbaccess import DBaccess
 from errorhandler import DatabaseError
+from ebtables import EbTables
 import datetime
 
 
@@ -113,6 +114,17 @@ class MyTestCase(unittest.TestCase):
             testMAC3 = "00:01:02:03:04:07"
             self.assertEqual(db.getaccess(testMAC3, ownerunkEndDate - datetime.timedelta(hours=1)), True, "tga7")
             self.assertEqual(db.getaccess(testMAC3, ownerunkEndDate + datetime.timedelta(hours=1)), False, "tga8")
+
+    def test_getknown_macs(self):
+        with DBaccess(dbpassword="TESTREADONLY") as db:
+            maclist = db.getknown_macs()
+            self.assertIsNotNone(maclist, "tgkm1")
+
+    def test_ebtables(self):
+        with DBaccess(dbpassword="TESTREADONLY") as db:
+            ebtables = EbTables(db)
+            eblist = ebtables.compilerules()
+            self.assertIsNotNone(eblist, "tet1")
 
 if __name__ == '__main__':
     unittest.main()

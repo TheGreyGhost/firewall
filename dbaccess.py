@@ -56,6 +56,24 @@ class DBaccess:
         if not self.db is None:
             self.db.close()
 
+    def getknown_macs(self):
+        """ returns a list of all
+
+        :return:
+        :raises: DatabaseError
+        """
+        if self.db is None or self.cursor is None:
+            raise DatabaseError("Not connected to a database")
+
+        self.cursor.execute("SELECT MAC FROM qryClientAccess")
+
+        # if we don't know this MAC, or the device has no owner, use reserved entry in owners table: unknown
+        allmacs = self.cursor.fetchall()
+        if allmacs is None:
+            return None
+        allmacslist = [i.MAC for i in allmacs]
+        return allmacslist
+
     def getaccess(self, macaddress, datetimenow):
         """  Returns the current access for the given MAC address at the given time
 
