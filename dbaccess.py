@@ -33,10 +33,12 @@ class DBaccess:
                                              port=port,
                                              user=username,  # your username
                                              passwd=dbpassword,  # your password
-                                             db=dbname)
+                                             db=dbname,
+                                             use_pure=True) #use_pure=true to prevent bug https://bugs.mysql.com/bug.php?id=90585
                 # you must create a Cursor object. It will let
                 #  you execute all the queries you need
-                self.cursor = self.db.cursor(named_tuple=True)
+                self.cursor = self.db.cursor(buffered=True, named_tuple=True)
+                    #buffered=True to prevent mysql.connector.errors.InternalError: Unread result found.
             except mysql.connector.Error as err:
                 if err.errno == errorcode.ER_ACCESS_DENIED_ERROR and interactive:
                     print("Something is wrong with your user name or password")
