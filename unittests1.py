@@ -130,7 +130,4 @@ class MyTestCase(unittest.TestCase):
             self.assertIsNotNone(eblist, "tet1")
 
 if __name__ == '__main__':
-    if sys.argv[1:] == "pi":
-        testport = 3306
-
     unittest.main()
