@@ -1,11 +1,14 @@
 import unittest
+import sys
 from dbaccess import DBaccess
 from errorhandler import DatabaseError
 from ebtables import EbTables
 import datetime
 
+testport = 8889
 
 class MyTestCase(unittest.TestCase):
+
     def test_databaseconnections(self):
         pass
         # with DBaccess() as newdb:
@@ -16,7 +19,7 @@ class MyTestCase(unittest.TestCase):
         #         newdb.testconnection()
 
     def test_clientlogic(self):
-        with DBaccess(dbpassword="TESTREADONLY") as db:
+        with DBaccess(dbpassword="TESTREADONLY", port=testport) as db:
             # 1. BlockedUntil - still valid
             testtimestr = "2018-06-03 12:35:22"
             testtimedt = datetime.datetime.strptime(testtimestr, "%Y-%m-%d %H:%M:%S")
@@ -46,7 +49,7 @@ class MyTestCase(unittest.TestCase):
                              DBaccess.BLOCKING_PRIORITY_CLIENT_DEFAULT, "tcl6")
 
     def test_ownerlogic(self):
-        with DBaccess(dbpassword="TESTREADONLY") as db:
+        with DBaccess(dbpassword="TESTREADONLY", port=testport) as db:
             # 1. BlockedUntil - still valid
             testtimestr = "2018-06-03 12:35:22"
             testtimedt = datetime.datetime.strptime(testtimestr, "%Y-%m-%d %H:%M:%S")
@@ -76,7 +79,7 @@ class MyTestCase(unittest.TestCase):
                              DBaccess.BLOCKING_PRIORITY_OWNER_DEFAULT, "tol6")
 
     def test_getaccess(self):
-        with DBaccess(dbpassword="TESTREADONLY") as db:
+        with DBaccess(dbpassword="TESTREADONLY", port=testport) as db:
             # tests for getaccess:
             # 1) MAC with owner that is blocked and client that is unblocked.  Repeat for time elapsed
             # DB contains
@@ -116,15 +119,18 @@ class MyTestCase(unittest.TestCase):
             self.assertEqual(db.getaccess(testMAC3, ownerunkEndDate + datetime.timedelta(hours=1)), False, "tga8")
 
     def test_getknown_macs(self):
-        with DBaccess(dbpassword="TESTREADONLY") as db:
+        with DBaccess(dbpassword="TESTREADONLY", port=testport) as db:
             maclist = db.getknown_macs()
             self.assertIsNotNone(maclist, "tgkm1")
 
     def test_ebtables(self):
-        with DBaccess(dbpassword="TESTREADONLY") as db:
+        with DBaccess(dbpassword="TESTREADONLY", port=testport) as db:
             ebtables = EbTables(db)
             eblist = ebtables.compilerules()
             self.assertIsNotNone(eblist, "tet1")
 
 if __name__ == '__main__':
+    if sys.argv[1:] == "pi":
+        testport = 3306
+
     unittest.main()
