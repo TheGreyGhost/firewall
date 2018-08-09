@@ -11,15 +11,6 @@ import os
 
 IDE = True
 
-if IDE:
-    testport = 8889
-    EBTABLES_FILENAME = r"c:/junk/ebtabletemp"
-    EBTABLES_SCRIPT_PATH = r"c:/junk"
-else:
-    testport = 3306
-    EBTABLES_FILENAME = r"/var/tap/ebtabletemp"
-    EBTABLES_SCRIPT_PATH = r"/var/tap"
-
 BASH_CMD = "bash"
 
 debug = False
@@ -29,8 +20,19 @@ if __name__ == '__main__':
     for arg in sys.argv[1:]:
         if arg == "-debug":
             debug = True
+        elif arg == "-cmd":
+            IDE = False
         else:
-            print("usage: {} -debug".format(sys.argv[0]))
+            print("usage: {} -debug -cmd".format(sys.argv[0]))
+
+    if IDE:
+        testport = 8889
+        EBTABLES_FILENAME = r"c:/junk/ebtabletemp"
+        EBTABLES_SCRIPT_PATH = r"c:/junk"
+    else:
+        testport = 3306
+        EBTABLES_FILENAME = r"/var/tap/ebtabletemp"
+        EBTABLES_SCRIPT_PATH = r"/var/tap"
 
     with DBaccess(dbpassword="TESTREADONLY", port=testport) as db:
         ebtables = EbTables(db)
