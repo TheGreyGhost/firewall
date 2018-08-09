@@ -112,7 +112,7 @@ class EbTables:
         """
         eblines = []
         eblines.append("{0} --atomic-file {1} --atomic-init ".format(lineprefix, atomicfilename))
-        eblines.append(self.compilerules(lineprefix, atomicfilename))
+        eblines += self.compilerules(lineprefix, atomicfilename)
         eblines.append("{0} --atomic-file {1} --atomic-commit".format(lineprefix, atomicfilename))
         return eblines
 

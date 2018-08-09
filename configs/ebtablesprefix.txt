@@ -17,12 +17,11 @@ BRIDGE_IF_NAME=br0
 # Set default policy
 #
 
-$EBTABLES --init-table
-
 $EBTABLES -P INPUT ACCEPT
 $EBTABLES -P OUTPUT ACCEPT
 $EBTABLES -P FORWARD DROP
-# clear existing tables
-$EBTABLES -F
+# clear existing chains except FORWARD on filter
+$EBTABLES -F INPUT
+$EBTABLES -F OUTPUT
 $EBTABLES -t nat -F
 $EBTABLES -t broute -F
