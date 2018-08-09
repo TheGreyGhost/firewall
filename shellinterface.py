@@ -49,12 +49,32 @@ if __name__ == '__main__':
                 f.write(singleline)
                 f.write("\n")
 
-    with tempfile.NamedTemporaryFile(mode="w+t", dir=EBTABLES_SCRIPT_PATH) as tmp:
+    # with tempfile.NamedTemporaryFile(mode="w+t", dir=EBTABLES_SCRIPT_PATH) as tmp:
+    #     for singleline in eblist:
+    #         tmp.write(singleline)
+    #         tmp.write("\n")
+    #     tmp.flush()
+    #     os.fsync(tmp.fileno())
+    #     cmd = subprocess.Popen([BASH_CMD, tmp.name])
+
+    tmpscriptfilename = EBTABLES_SCRIPT_PATH + "/junkus"
+    tmp = open(tmpscriptfilename, mode="wt")
+
+    try:
         for singleline in eblist:
             tmp.write(singleline)
             tmp.write("\n")
         tmp.flush()
         os.fsync(tmp.fileno())
-        cmd = subprocess.Popen([BASH_CMD, tmp.name])
+#        cmd = subprocess.Popen([BASH_CMD, tmp.name])
+    finally:
+        tmpname = tmp.name
+        tmp.close()
+        os.remove(tmpname)
+
+
+
+
+
 
 
