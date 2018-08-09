@@ -27,20 +27,19 @@ if __name__ == '__main__':
 
     with DBaccess(dbpassword="TESTREADONLY", port=testport) as db:
         ebtables = EbTables(db)
-        eblist = ebtables.compilerulesandcommit(EBTABLES_FILENAME)
-        print("eblist: {}".format(eblist))
-
+#        eblist = ebtables.compilerulesandcommit(EBTABLES_FILENAME)
+#        print("eblist: {}".format(eblist))
         eblist = ebtables.completeupdate(EBTABLES_FILENAME)
-        print("eblist: {}".format(eblist))
+#        print("eblist: {}".format(eblist))
 
     if debug:
         tempscriptfilename = EBTABLES_SCRIPT_PATH + "ebtables.sh"
         print("wrote temp script to {}".format(tempscriptfilename))
-        with open(EBTABLES_SCRIPT_PATH + "ebtables.sh", "r") as f:
+        with open(EBTABLES_SCRIPT_PATH + "ebtables.sh", "w+t") as f:
             f.writelines(eblist)
 
-    with tempfile.TemporaryFile(dir=EBTABLES_SCRIPT_PATH) as tmp:
+    with tempfile.NamedTemporaryFile(mode="w+t", dir=EBTABLES_SCRIPT_PATH) as tmp:
         tmp.writelines(eblist)
-        cmd = subprocess.Popen([BASH_CMD, EBTABLES_SCRIPT_PATH])
+        cmd = subprocess.Popen([BASH_CMD, tmp.name])
 
 
