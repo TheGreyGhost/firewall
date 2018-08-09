@@ -33,13 +33,13 @@ if __name__ == '__main__':
 #        print("eblist: {}".format(eblist))
 
     if debug:
-        tempscriptfilename = EBTABLES_SCRIPT_PATH + "ebtables.sh"
+        tempscriptfilename = EBTABLES_SCRIPT_PATH + "/ebtables.sh"
         print("wrote temp script to {}".format(tempscriptfilename))
-        with open(EBTABLES_SCRIPT_PATH + "ebtables.sh", "w+t") as f:
+        with open(tempscriptfilename, "w+t") as f:
             f.writelines(eblist)
 
     with tempfile.NamedTemporaryFile(mode="w+t", dir=EBTABLES_SCRIPT_PATH) as tmp:
-        tmp.writelines(eblist)
+        tmp.writelines(*eblist)
         cmd = subprocess.Popen([BASH_CMD, tmp.name])
 
 
