@@ -40,7 +40,7 @@ if __name__ == '__main__':
                 f.write(singleline)
                 f.write("\n")
 
-    with tempfile.NamedTemporaryFile(mode="w+t", dir=EBTABLES_SCRIPT_PATH) as tmp:
+    with tempfile.NamedTemporaryFile(mode="w+t", dir=EBTABLES_SCRIPT_PATH, delete=False) as tmp:
         for singleline in eblist:
             tmp.write(singleline)
             tmp.write("\n")
