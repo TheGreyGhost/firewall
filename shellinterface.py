@@ -36,10 +36,14 @@ if __name__ == '__main__':
         tempscriptfilename = EBTABLES_SCRIPT_PATH + "/ebtables.sh"
         print("wrote temp script to {}".format(tempscriptfilename))
         with open(tempscriptfilename, "w+t") as f:
-            f.writelines(eblist)
+            for singleline in eblist:
+                f.write(singleline)
+                f.write("\n")
 
     with tempfile.NamedTemporaryFile(mode="w+t", dir=EBTABLES_SCRIPT_PATH) as tmp:
-        tmp.writelines(*eblist)
+        for singleline in eblist:
+            tmp.write(singleline)
+            tmp.write("\n")
         cmd = subprocess.Popen([BASH_CMD, tmp.name])
 
 
