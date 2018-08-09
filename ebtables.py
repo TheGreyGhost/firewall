@@ -19,6 +19,8 @@ $EBTABLES  -A FORWARD --log-level info --log-ip --log-prefix EBTABLESLOG
 $EBTABLES - A FORWARD --among-src ! MAC1, MAC2
 $EBTABLES - A FORWARD --among-dst ! MAC1, MAC2 -j
 
+$EBTABLES is added by the caller
+
 ################################################################
 # END
 ################################################################
@@ -51,41 +53,78 @@ class EbTables:
     LOGFILE_PREFIX_DNS_QUERY = "EBTABLESLOGDQ"
     LOGFILE_PREFIX_DNS_RESPONSE = "EBTABLESLOGDR"
 
+    HEADER_CONFIG_FILE = "configs/ebtablesprefix.txt"
+
     def __init__(self, database):
         """
         :param database: the DBaccess to use
         """
         self.dbAccess = database
 
-    def compilerules(self):
+    def compilerules(self, lineprefix="$EBTABLES", atomicfilename=None):
         """
         compile the ebtables script for the access rules in the database
+        :lineprefix: the prefix to add to the start of each line
+        :atomicfilename: if the rules are to be used for atomic commit: the filename to use
         :return: list of rules in order
         """
         eblines = []
-    # first check for all known macs
+
+        atomicoptions = {"atomicfile": ""}
+
+        if not atomicfilename is None:
+            atomicoptions = {"atomicfile": " --atomic-file " + atomicfilename}
+
+        # first check for all known macs
         allknownmacs = self.dbAccess.getknown_macs()
-        ebline = "$EBTABLES - A FORWARD -p IP --among-src ! " + ",".join(allknownmacs)
-        ebline += "--log-level info --log-ip --log-prefix {} -j CONTINUE".format(self.LOGFILE_PREFIX_UNKNOWN_MAC)
+        ebline = "{0} -A FORWARD -p IP --among-src ! ".format(lineprefix) + ",".join(allknownmacs)
+        ebline += " --log-level info --log-ip --log-prefix {1} -j CONTINUE"\
+            .format(lineprefix, self.LOGFILE_PREFIX_UNKNOWN_MAC, **atomicoptions)
         eblines.append(ebline)
 
     # pass all ARP
-        eblines.append("$EBTABLES -A FORWARD -p ARP -j ACCEPT")
+        eblines.append("{0} -A FORWARD -p ARP -j ACCEPT".format(lineprefix))
 
 #log all dns -for troubleshooting at this time
-        eblines.append("$EBTABLES -A FORWARD -i $INSIDE_IF_NAME  -p IP --ip-protocol UDP --ip-destination-port 53" 
-                       " --log-level info --log-ip --log-prefix {} -j CONTINUE".format(self.LOGFILE_PREFIX_DNS_QUERY))
-        eblines.append("$EBTABLES -A FORWARD -i $INSIDE_IF_NAME  -p IP --ip-protocol TDP --ip-destination-port 53"
-                       " --log-level info --log-ip --log-prefix {} -j CONTINUE".format(self.LOGFILE_PREFIX_DNS_QUERY))
-        eblines.append("$EBTABLES -A FORWARD -i $OUTSIDE_IF_NAME  -p IP --ip-protocol UDP --ip-source-port 53" 
-                       " --log-level info --log-ip --log-prefix {}"
-                       " -j CONTINUE".format(self.LOGFILE_PREFIX_DNS_RESPONSE))
-        eblines.append("$EBTABLES -A FORWARD -i $OUTSIDE_IF_NAME  -p IP --ip-protocol TDP --ip-source-port 53"
-                       " --log-level info --log-ip --log-prefix {}"
-                       " -j CONTINUE".format(self.LOGFILE_PREFIX_DNS_RESPONSE))
+        eblines.append("{0} -A FORWARD -i $INSIDE_IF_NAME  -p IP --ip-protocol UDP --ip-destination-port 53" 
+                       " --log-level info --log-ip --log-prefix {1} -j CONTINUE"
+                       .format(lineprefix, self.LOGFILE_PREFIX_DNS_QUERY, **atomicoptions))
+        eblines.append("{0} -A FORWARD -i $INSIDE_IF_NAME  -p IP --ip-protocol TDP --ip-destination-port 53"
+                       " --log-level info --log-ip --log-prefix {1} -j CONTINUE"
+                       .format(lineprefix, self.LOGFILE_PREFIX_DNS_QUERY, **atomicoptions))
+        eblines.append("{0} -A FORWARD -i $OUTSIDE_IF_NAME  -p IP --ip-protocol UDP --ip-source-port 53" 
+                       " --log-level info --log-ip --log-prefix {1}"
+                       " -j CONTINUE".format(lineprefix, self.LOGFILE_PREFIX_DNS_RESPONSE, **atomicoptions))
+        eblines.append("{0} -A FORWARD -i $OUTSIDE_IF_NAME  -p IP --ip-protocol TDP --ip-source-port 53"
+                       " --log-level info --log-ip --log-prefix {1}"
+                       " -j CONTINUE".format(lineprefix, self.LOGFILE_PREFIX_DNS_RESPONSE, **atomicoptions))
 
     # for now: pass all IP4
-        eblines.append("$EBTABLES -A FORWARD -p IPv4 -j ACCEPT")
+        eblines.append("{0} -A FORWARD -p IPv4 -j ACCEPT".format(lineprefix))
         return eblines
 
+    def compilerulesandcommit(self, atomicfilename, lineprefix="$EBTABLES"):
+        """
+        compile the ebtables script for the access rules in the database, wrap it in commit
+        :lineprefix: the prefix to add to the start of each line
+        :atomicfilename: the filename to use for the commit
+        :return: list of rules in order
+        """
+        eblines = []
+        eblines.append("{0} --atomic-file {1} --atomic-init ".format(lineprefix, atomicfilename))
+        eblines.append(self.compilerules(lineprefix, atomicfilename))
+        eblines.append("{0} --atomic-file {1} --atomic-commit".format(lineprefix, atomicfilename))
+        return eblines
+
+    def completeupdate(self, atomicfilename):
+        """
+        perform a complete update of the table
+        :param atomicfilename: the atomic commit filename to use
+        :return: the script ready for execution
+        """
+
+        with open(self.HEADER_CONFIG_FILE, 'r') as f:
+            header = f.readlines()
+        eblines = header + self.compilerulesandcommit(atomicfilename)
+        return eblines
 
