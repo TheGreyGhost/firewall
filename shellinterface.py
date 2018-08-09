@@ -7,12 +7,19 @@ from ebtables import EbTables
 import datetime
 import subprocess
 import tempfile
+import os
 
-testport = 3306
-#testport = 8889
+IDE = True
 
-EBTABLES_FILENAME = r"/var/tap/ebtabletemp"
-EBTABLES_SCRIPT_PATH = r"/var/tap"
+if IDE:
+    testport = 8889
+    EBTABLES_FILENAME = r"c:/junk/ebtabletemp"
+    EBTABLES_SCRIPT_PATH = r"c:/junk"
+else:
+    testport = 3306
+    EBTABLES_FILENAME = r"/var/tap/ebtabletemp"
+    EBTABLES_SCRIPT_PATH = r"/var/tap"
+
 BASH_CMD = "bash"
 
 debug = False
@@ -40,10 +47,12 @@ if __name__ == '__main__':
                 f.write(singleline)
                 f.write("\n")
 
-    with tempfile.NamedTemporaryFile(mode="w+t", dir=EBTABLES_SCRIPT_PATH, delete=False) as tmp:
+    with tempfile.NamedTemporaryFile(mode="w+t", dir=EBTABLES_SCRIPT_PATH) as tmp:
         for singleline in eblist:
             tmp.write(singleline)
             tmp.write("\n")
+        tmp.flush()
+        os.fsync()
         cmd = subprocess.Popen([BASH_CMD, tmp.name])
 
 
