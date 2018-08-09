@@ -54,7 +54,7 @@ if __name__ == '__main__':
             tmp.write(singleline)
             tmp.write("\n")
         tmp.flush()
-        os.fsync()
+        os.fsync(tmp.fileno())
         cmd = subprocess.Popen([BASH_CMD, tmp.name])
 
 
