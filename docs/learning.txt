@@ -13,3 +13,13 @@ bind()
 Receiving Netlink Messages
 A receiving application needs to allocate a buffer large enough to hold netlink message headers and message payloads. It then fills the struct msghdr msg as shown below and uses the standard recvmsg() to receive the netlink message, assuming the buffer is pointed to by nlh:
 
+NETLINK_NFLOG (up to and including Linux 3.16)
+Netfilter/iptables ULOG.
+
+https://manpages.debian.org/testing/manpages/netlink.7.en.html
+
+kernel doesn't support ulog :(
+but nflog ok
+
+libnetfilter_log
+

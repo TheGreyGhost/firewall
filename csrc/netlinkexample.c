@@ -25,7 +25,7 @@ int open_netlink(void)
     int group = MYMGRP;
 
 //    sock = socket(PF_NETLINK, SOCK_RAW, MYPROTO);
-    sock = socket(AF_NETLINK, SOCK_RAW, MYPROTO);
+    sock = socket(AF_NETLINK, SOCK_RAW, NETLINK_NFLOG);
     if (sock < 0) {
         printf("sock < 0.\n");
         return sock;
@@ -77,7 +77,7 @@ void read_event(int sock)
     if (ret < 0)
         printf("ret < 0.\n");
     else
-        printf("Received message total length: %lu; flags %x"\n",
+        printf("Received message total length: %lu; flags %x\n",
 		  hdr->nlmsg_len, hdr->nlmsg_flags);
 // http://man7.org/linux/man-pages/man3/netlink.3.html
 }
