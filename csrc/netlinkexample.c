@@ -5,6 +5,8 @@
 #include <linux/netlink.h>
 #include <unistd.h>
 
+//https://people.redhat.com/nhorman/papers/netlink.pdf
+
 /* Protocol family, consistent in both kernel prog and user prog. */
 // #define MYPROTO NETLINK_USERSOCK
 #define MYPROTO NETLINK_NFLOG
@@ -22,15 +24,15 @@ int open_netlink(void)
     struct sockaddr_nl addr;
     int group = MYMGRP;
 
-    sock = socket(PF_NETLINK, SOCK_RAW, MYPROTO);
-//    sock = socket(AF_NETLINK, SOCK_RAW, MYPROTO);
+//    sock = socket(PF_NETLINK, SOCK_RAW, MYPROTO);
+    sock = socket(AF_NETLINK, SOCK_RAW, MYPROTO);
     if (sock < 0) {
         printf("sock < 0.\n");
         return sock;
     }
 
     memset((void *) &addr, 0, sizeof(addr));
-    addr.nl_family = PF_NETLINK;
+    addr.nl_family = AF_NETLINK;
     addr.nl_pid = getpid();
     /* This doesn't work for some reason. See the setsockopt() below. */
     addr.nl_groups = 1 << MYMGRP;
@@ -60,6 +62,7 @@ void read_event(int sock)
     struct msghdr msg;
     struct iovec iov;
     char buffer[MAX_NL_MSG_LEN];
+    struct nlmsghdr *hdr = (struct nlmsghdr *)buffer;
     int ret;
 
     iov.iov_base = (void *) buffer;
@@ -74,8 +77,8 @@ void read_event(int sock)
     if (ret < 0)
         printf("ret < 0.\n");
     else
-        printf("Received message payload length: %i\n", 
-		NLMSG_PAYLOAD((struct nlmsghdr *)buffer));
+        printf("Received message total length: %lu; flags %x"\n",
+		  hdr->nlmsg_len, hdr->nlmsg_flags);
 // http://man7.org/linux/man-pages/man3/netlink.3.html
 }
 
