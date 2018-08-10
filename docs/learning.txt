@@ -1,0 +1,15 @@
+The ulog watcher passes the packet to a userspace logging daemon using netlink multicast sockets.
+
+https://stackoverflow.com/questions/22691305/multicast-from-kernel-to-user-space-via-netlink-in-c
+https://www.systutorials.com/docs/linux/man/7-netlink/
+
+some examples:
+https://www.linuxjournal.com/article/7356
+
+A netlink message thus consists of nlmsghdr and the message payload. Once a message has been entered, it enters a buffer pointed to by the nlh pointer. We also can send the message to the struct msghdr msg:
+socket()
+bind()
+
+Receiving Netlink Messages
+A receiving application needs to allocate a buffer large enough to hold netlink message headers and message payloads. It then fills the struct msghdr msg as shown below and uses the standard recvmsg() to receive the netlink message, assuming the buffer is pointed to by nlh:
+
