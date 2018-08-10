@@ -103,7 +103,7 @@ class EbTables:
         eblines.append("{0} -A FORWARD -p IPv4 -j ACCEPT".format(lineprefix))
         return eblines
 
-    def compilerulesandcommit(self, atomicfilename, lineprefix="$EBTABLES"):
+    def compilerulesandcommit(self, atomiccommitfilename, lineprefix="$EBTABLES"):
         """
         compile the ebtables script for the access rules in the database, wrap it in commit
         :lineprefix: the prefix to add to the start of each line
@@ -111,20 +111,24 @@ class EbTables:
         :return: list of rules in order
         """
         eblines = []
-        eblines.append("{0} --atomic-file {1} --atomic-init ".format(lineprefix, atomicfilename))
-        eblines += self.compilerules(lineprefix, atomicfilename)
-        eblines.append("{0} --atomic-file {1} --atomic-commit".format(lineprefix, atomicfilename))
+        eblines.append("{0} --atomic-file {1} --atomic-init ".format(lineprefix, atomiccommitfilename))
+        eblines += self.compilerules(lineprefix, atomiccommitfilename)
+        eblines.append("{0} --atomic-file {1} --atomic-commit".format(lineprefix, atomiccommitfilename))
         return eblines
 
-    def completeupdate(self, atomicfilename):
+    def completeupdate(self, atomiccommitfilename=None):
         """
         perform a complete update of the table
-        :param atomicfilename: the atomic commit filename to use
+        :param atomicfilename: the atomic commit filename to use, if any.  If none, don't use atomic commit
         :return: the script ready for execution
         """
 
         with open(self.HEADER_CONFIG_FILE, 'r') as f:
             header = f.readlines()
-        eblines = header + self.compilerulesandcommit(atomicfilename)
+        if atomiccommitfilename is None:
+            eblines = header + self.compilerules()
+        else:
+            eblines = header + self.compilerulesandcommit(atomiccommitfilename)
+
         return eblines
 
