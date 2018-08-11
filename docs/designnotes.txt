@@ -77,3 +77,21 @@ tests for getaccess:
 
 Step 2:
 ebtables rules generator to generate appropriate rules for all database entries
+use a crontab or similar to update periodically (every 5 minutes)
+commit
+
+Step 3:
+use log and rsyslogd and a named pipe to track:
+1) unknown MACs
+2) unknown IPs
+3) IP src and dst
+
+Accumulate these in an internal structure then periodically upload to mysql (eg hourly; or upon trigger)
+entries: clump together in 10 minute intervals:
+src IP:port + dst IP:port, packet count
+
+2018-08-11T16:21:09.503819+09:30 garden kernel: [103105.328637] EBTABLESLOGINFO IN=enxa0cec81d71e2 OUT=enxb827eb8cefb8 MAC source = 38:2c:4a:64:d1:50 MAC dest = a4:91:b1:4f:6b:e8 proto = 0x0800 IP SRC=192.168.1.200 IP DST=203.47.10.37, IP tos=0x00, IP proto=6 SPT=55028 DPT=8080
+
+
+
+
