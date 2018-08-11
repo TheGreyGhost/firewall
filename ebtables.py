@@ -89,13 +89,13 @@ class EbTables:
         eblines.append("{0} -A FORWARD -i $INSIDE_IF_NAME  -p IP --ip-protocol UDP --ip-destination-port 53" 
                        " --log-level info --log-ip --log-prefix {1} -j CONTINUE"
                        .format(lineprefix, self.LOGFILE_PREFIX_DNS_QUERY, **atomicoptions))
-        eblines.append("{0} -A FORWARD -i $INSIDE_IF_NAME  -p IP --ip-protocol TDP --ip-destination-port 53"
+        eblines.append("{0} -A FORWARD -i $INSIDE_IF_NAME  -p IP --ip-protocol TCP --ip-destination-port 53"
                        " --log-level info --log-ip --log-prefix {1} -j CONTINUE"
                        .format(lineprefix, self.LOGFILE_PREFIX_DNS_QUERY, **atomicoptions))
         eblines.append("{0} -A FORWARD -i $OUTSIDE_IF_NAME  -p IP --ip-protocol UDP --ip-source-port 53" 
                        " --log-level info --log-ip --log-prefix {1}"
                        " -j CONTINUE".format(lineprefix, self.LOGFILE_PREFIX_DNS_RESPONSE, **atomicoptions))
-        eblines.append("{0} -A FORWARD -i $OUTSIDE_IF_NAME  -p IP --ip-protocol TDP --ip-source-port 53"
+        eblines.append("{0} -A FORWARD -i $OUTSIDE_IF_NAME  -p IP --ip-protocol TCP --ip-source-port 53"
                        " --log-level info --log-ip --log-prefix {1}"
                        " -j CONTINUE".format(lineprefix, self.LOGFILE_PREFIX_DNS_RESPONSE, **atomicoptions))
 
