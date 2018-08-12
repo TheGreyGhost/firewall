@@ -10,12 +10,6 @@ import subprocess
 import tempfile
 import os
 
-IDE = True
-
-BASH_CMD = "bash"
-
-debug = False
-
 # if __name__ == '__main__':
 #     print("arguments: ")
 #     for arg in sys.argv[1:]:
@@ -105,7 +99,7 @@ if __name__ == '__main__':
         ebtables = EbTables(db)
         eblist = ebtables.completeupdate(args.atomiccommitfilename)
 
-    if debug:
+    if args.debug:
         print("wrote temp script to {}".format(DEBUG_LOG_PATH), file=sys.stderr)
         with open(DEBUG_LOG_PATH, "w+t") as f:
             for singleline in eblist:
