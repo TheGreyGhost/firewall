@@ -190,4 +190,19 @@ class DBaccess:
         for row in self.cursor.fetchall():
             print(row[0:])
 
+    def log_unknown_MACs(self, entries, timestart, timefinish):
+        if self.db is None or self.cursor is None:
+            raise DatabaseError("Not connected to a database")
+        if len(entries) == 0:
+            return
+        sqlstringparts = ["INSERT INTO UNKNOWN_MACS_LOG (mac, count, timestart, timefinish) "
+                          "VALUES"]
+        separator = ""
+        for k, v in self.entries.items():
+            sqlstringparts.append("{0}({1}, {2}, {3}, {4})".format(separator, k, v, timestart, timefinish))
+            separator = ","
+        sqlstringparts.append(";")
+        sqlstring = "".join(sqlstringparts)
+        self.cursor.execute(sqlstring)
+        self.cursor.commit()
 

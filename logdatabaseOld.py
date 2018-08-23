@@ -75,8 +75,6 @@ class LogDatabase:
         :return: none
         :raises: LogDatabaseError if the input is malformed
         """
-        parsed = self.parse_log_entry(logstring)
-        self.add_log_entry(parsed)
 
     def parse_log_entry(self, logstring):
         """
@@ -122,12 +120,12 @@ class LogDatabase:
             indices.append(nextidx + len(v))
             lastidx = nextidx
 
-        srcMAC = str2[indices[0] : indices[0] + 17]
-        dstMAC = str2[indices[1] : indices[1] + 17]
-        srcIP = re.search(r"[\d\.]+", str[indices[2]:])
-        dstIP = re.search(r"[\d\.]+", str[indices[3]:])
-        srcPort = str2[indices[4]:].partition(" ")[0]
-        dstPort = str2[indices[5]:]
+        srcMAC = mac_to_bytes(str2, indices[0])
+        dstMAC = mac_to_bytes(str2, indices[1])
+        srcIP = ip_to_bytes(str2, indices[2])
+        dstIP = ip_to_bytes(str2, indices[3])
+        srcPort = int(str2[indices[4]:].partition(" ")[0])
+        dstPort = int(str2[indices[5]:])
 
         logdataentry = LogDataEntry(entry_type=entrytype, timestamp=timestamp, srcMAC=srcMAC, dstMAC=dstMAC, srcIP=srcIP, dstIP=dstIP,
                                     srcPort=srcPort, dstPort=dstPort)
@@ -144,38 +142,20 @@ class LogDatabase:
             elif logdataentry.entry_type == LogEntryType.UNKNOWN_IP:
                 self.unknown_ips[logdataentry.srcIP] += 1
             elif logdataentry.entry_type == LogEntryType.IP_TRAFFIC_IN:
-                keys = [logdataentry.srcIP, ":",
-                        logdataentry.srcPort, ";",
-                        logdataentry.destIP, ":",
-                        logdataentry.dstPort]
-                key = "".join(keys)
-                self.ip_traffic_in[key] += 1
+                self.ip_traffic_in[b"".join(logdataentry.srcIP,
+                                            logdataentry.srcPort.to_bytes(2, byteorder='big'),
+                                            logdataentry.destIP,
+                                            logdataentry.dstPort.to_bytes(2, byteorder='big'))] += 1
             elif logdataentry.entry_type == LogEntryType.IP_TRAFFIC_OUT:
-                keys = [logdataentry.srcIP, ":",
-                        logdataentry.srcPort, ";",
-                        logdataentry.destIP, ":",
-                        logdataentry.dstPort]
-                key = "".join(keys)
-                self.ip_traffic_out[key] += 1
+                self.ip_traffic_in[b"".join(logdataentry.srcIP,
+                                            logdataentry.srcPort.to_bytes(2, byteorder='big'),
+                                            logdataentry.destIP,
+                                            logdataentry.dstPort.to_bytes(2, byteorder='big'))] += 1
 
     def write_to_database(self):
-        """
-        writes all accumulated log data to the SQL database:
-        unknown MACS, unknown IPS, IP traffic log
-        :return:
-        """
         with self.datalock:
-            self.dbAccess.log_unknown_MACs(self.unknown_macs, self.firsttimestamp, self.lasttimestamp)
-            self.unknown_macs.clear()
 
-            self.dbAccess.log_unknown_IPs(self.unknown_ips, self.firsttimestamp, self.lasttimestamp)
-            self.unknown_ips.clear()
 
-            self.dbAccess.ip_traffic_in(self.ip_traffic_in, self.firsttimestamp, self.lasttimestamp)
-            self.ip_traffic_in.clear()
-
-            self.dbAccess.ip_traffic_out(self.ip_traffic_out, self.firsttimestamp, self.lasttimestamp)
-            self.ip_traffic_out.clear()
 
 def mac_to_bytes(str, start):
     macbytes = binascii.unhexlify(str[start:start+17].replace(':', ''))
