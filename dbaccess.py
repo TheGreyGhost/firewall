@@ -191,18 +191,29 @@ class DBaccess:
             print(row[0:])
 
     def log_unknown_MACs(self, entries, timestart, timefinish):
+        self.log_common("unknown_macs_log", "mac", entries, timestart, timefinish)
+
+    def log_unknown_IPs(self, entries, timestart, timefinish):
+        self.log_common("unknown_ips_log", "ip", entries, timestart, timefinish)
+
+    def log_IP_traffic_in(self, entries, timestart, timefinish):
+        self.log_common("ip_traffic_in_log", "ip_src_and_dest", entries, timestart, timefinish)
+
+    def log_IP_traffic_out(self, entries, timestart, timefinish):
+        self.log_common("ip_traffic_out_log", "ip_src_and_dest", entries, timestart, timefinish)
+
+    def log_common(self, tablename, logfield, entries, timestart, timefinish):
         if self.db is None or self.cursor is None:
             raise DatabaseError("Not connected to a database")
         if len(entries) == 0:
             return
-        sqlstringparts = ["INSERT INTO UNKNOWN_MACS_LOG (mac, count, timestart, timefinish) "
-                          "VALUES"]
-        separator = ""
-        for k, v in self.entries.items():
-            sqlstringparts.append("{0}({1}, {2}, {3}, {4})".format(separator, k, v, timestart, timefinish))
+        sqlstringparts = ["INSERT INTO {0} ({1}, count, timestart, timefinish) "
+                          "VALUES".format(tablename, logfield)]
+        separator = " "
+        for k, v in entries.items():
+            sqlstringparts.append("{0}('{1}', {2}, '{3}', '{4}')".format(separator, k, v, timestart, timefinish))
             separator = ","
         sqlstringparts.append(";")
         sqlstring = "".join(sqlstringparts)
         self.cursor.execute(sqlstring)
-        self.cursor.commit()
-
+        self.db.commit()

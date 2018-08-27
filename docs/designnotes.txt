@@ -92,6 +92,24 @@ src IP:port + dst IP:port, packet count
 
 2018-08-11T16:21:09.503819+09:30 garden kernel: [103105.328637] EBTABLESLOGINFO IN=enxa0cec81d71e2 OUT=enxb827eb8cefb8 MAC source = 38:2c:4a:64:d1:50 MAC dest = a4:91:b1:4f:6b:e8 proto = 0x0800 IP SRC=192.168.1.200 IP DST=203.47.10.37, IP tos=0x00, IP proto=6 SPT=55028 DPT=8080
 
+----
+test:
+logdatabase:
+1) add_log_entry_string
+2) write_to_database
+use dbaccess with testaddrows and with 
+testreadwrite
+
+four tables:
+UNKNOWN_MACS_LOG (mac, count, timestart, timefinish)
+UNKNOWN_IPS_LOG (ip, count, timestart, timefinish)
+IP_TRAFFIC_IN_LOG (srcIP:port;dstIP:port, count, timestart, timefinish)
+IP_TRAFFIC_OUT_LOG (srcIP:port;dstIP:port, count, timestart, timefinish)
+
+
+
+
+
 
 
 

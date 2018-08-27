@@ -30,13 +30,16 @@ from enum import Enum, auto
 import collections
 import threading
 
+
 class LogEntryType(Enum):
     UNKNOWN_MAC = auto()
     UNKNOWN_IP = auto()
     IP_TRAFFIC_IN = auto()
     IP_TRAFFIC_OUT = auto()
 
+
 LogDataEntry = namedtuple("LogDataEntry", "entry_type timestamp srcMAC dstMAC srcIP srcPort dstIP dstPort")
+
 
 class LogDatabase:
     dbAccess = None
@@ -124,8 +127,8 @@ class LogDatabase:
 
         srcMAC = str2[indices[0] : indices[0] + 17]
         dstMAC = str2[indices[1] : indices[1] + 17]
-        srcIP = re.search(r"[\d\.]+", str[indices[2]:])
-        dstIP = re.search(r"[\d\.]+", str[indices[3]:])
+        srcIP = extract_ip(str2, indices[2])
+        dstIP = extract_ip(str2, indices[3])
         srcPort = str2[indices[4]:].partition(" ")[0]
         dstPort = str2[indices[5]:]
 
@@ -146,14 +149,14 @@ class LogDatabase:
             elif logdataentry.entry_type == LogEntryType.IP_TRAFFIC_IN:
                 keys = [logdataentry.srcIP, ":",
                         logdataentry.srcPort, ";",
-                        logdataentry.destIP, ":",
+                        logdataentry.dstIP, ":",
                         logdataentry.dstPort]
                 key = "".join(keys)
                 self.ip_traffic_in[key] += 1
             elif logdataentry.entry_type == LogEntryType.IP_TRAFFIC_OUT:
                 keys = [logdataentry.srcIP, ":",
                         logdataentry.srcPort, ";",
-                        logdataentry.destIP, ":",
+                        logdataentry.dstIP, ":",
                         logdataentry.dstPort]
                 key = "".join(keys)
                 self.ip_traffic_out[key] += 1
@@ -171,10 +174,10 @@ class LogDatabase:
             self.dbAccess.log_unknown_IPs(self.unknown_ips, self.firsttimestamp, self.lasttimestamp)
             self.unknown_ips.clear()
 
-            self.dbAccess.ip_traffic_in(self.ip_traffic_in, self.firsttimestamp, self.lasttimestamp)
+            self.dbAccess.log_IP_traffic_in(self.ip_traffic_in, self.firsttimestamp, self.lasttimestamp)
             self.ip_traffic_in.clear()
 
-            self.dbAccess.ip_traffic_out(self.ip_traffic_out, self.firsttimestamp, self.lasttimestamp)
+            self.dbAccess.log_IP_traffic_out(self.ip_traffic_out, self.firsttimestamp, self.lasttimestamp)
             self.ip_traffic_out.clear()
 
 def mac_to_bytes(str, start):
@@ -182,8 +185,15 @@ def mac_to_bytes(str, start):
     return macbytes
 
 def ip_to_bytes(str, start):
-    addressonly = re.search(r"[\d\.]+", str[start:])
+    addressonly = re.search(r"[\d.]+", str[start:])
     if not addressonly:
         return b'\x00\x00\x00\x00'
     ipbytes = socket.inet_aton(addressonly.group())
+    return ipbytes
+
+def extract_ip(str, start):
+    addressonly = re.search(r"[\d.]+", str[start:])
+    if not addressonly:
+        return "0.0.0.0"
+    ipbytes = addressonly.group()
     return ipbytes
