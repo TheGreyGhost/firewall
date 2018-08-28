@@ -2,6 +2,7 @@ import ebtables
 from ebtables import EbTables
 import sys
 from dbaccess import DBaccess
+import errorhandler
 from errorhandler import DatabaseError
 from ebtables import EbTables
 import argparse
@@ -9,6 +10,7 @@ import datetime
 import subprocess
 import tempfile
 import os
+import logging
 
 # if __name__ == '__main__':
 #     print("arguments: ")
@@ -78,10 +80,12 @@ if __name__ == '__main__':
     # EBTABLES_FILENAME = r"/var/tap/ebtabletemp"
     # EBTABLES_SCRIPT_PATH = r"/var/tap"
 
-    if sys.platform.startswith('linux'):
-        DEBUG_LOG_PATH = r"/var/tap/test.txt"
-    else:
-        DEBUG_LOG_PATH = r"c:/junk/test.txt"
+    if sys.platform.startswith('linux'):  # defaults for CMD line:
+        DEBUG_LOG_PATH = r"/var/tap/ebtablerulegen.log"
+        TESTPORT = "3306"
+    else:  # defaults for IDE:
+        DEBUG_LOG_PATH = r"c:/junk/ebtablerulegen.log"
+        TESTPORT = "8889"
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-acf", "--atomiccommitfilename",
@@ -89,10 +93,12 @@ if __name__ == '__main__':
     parser.add_argument("-d", "--debug", help="print debugging information", action="store_true")
     parser.add_argument("-db", "--databasename", help="name of the database to connect to", default="testfirewall")
     parser.add_argument("-host", help="the host to connect to (IP address)", default="localhost")
-    parser.add_argument("-port", help="the host port to connect to", default="3306")
+    parser.add_argument("-port", help="the host port to connect to", default=TESTPORT)
     parser.add_argument("-pw", "--password", help="the database password", default="TESTREADONLY")
     parser.add_argument("-user", "--username", help="the database username", default="testreadonly")
     args = parser.parse_args()
+
+    errorhandler.initialise("ebtablerulegen", DEBUG_LOG_PATH, logging.DEBUG if args.debug else logging.INFO)
 
     with DBaccess(host=args.host, port=args.port, dbname=args.databasename,
                   username=args.username, dbpassword=args.password) as db:
@@ -100,11 +106,10 @@ if __name__ == '__main__':
         eblist = ebtables.completeupdate(args.atomiccommitfilename)
 
     if args.debug:
-        print("wrote temp script to {}".format(DEBUG_LOG_PATH), file=sys.stderr)
-        with open(DEBUG_LOG_PATH, "w+t") as f:
+#        print("wrote temp script to {}".format(DEBUG_LOG_PATH), file=sys.stderr)
+#        with open(DEBUG_LOG_PATH, "w+t") as f:
             for singleline in eblist:
-                f.write(singleline)
-                f.write("\n")
+                errorhandler.logdebug(singleline)
 
     for singleline in eblist:
         print(singleline)
