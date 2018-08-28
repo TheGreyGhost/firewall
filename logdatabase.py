@@ -107,30 +107,44 @@ class LogDatabase:
         except ValueError:
             raise errorhandler.LogDatabaseError("Value error parsing timestamp out of log entry")
 
-        tokens = {
+        mactokens = {
             "MAC source": "MAC source = ",
             "MAC dest": "MAC dest = ",
-            "IP source": "IP SRC=",
-            "IP dest": "IP DST=",
-            "IP source port": "SPT=",
-            "IP dest port": "DPT="
         }
-
         indices = []
         lastidx = 0
-        for k, v in tokens.items():
+        for k, v in mactokens.items():
             nextidx = str2.find(v, lastidx)
             if nextidx < 0:
                 raise errorhandler.LogDatabaseError("{} not found in log entry".format(k))
             indices.append(nextidx + len(v))
             lastidx = nextidx
-
         srcMAC = str2[indices[0] : indices[0] + 17]
         dstMAC = str2[indices[1] : indices[1] + 17]
-        srcIP = extract_ip(str2, indices[2])
-        dstIP = extract_ip(str2, indices[3])
-        srcPort = str2[indices[4]:].partition(" ")[0]
-        dstPort = str2[indices[5]:]
+
+        iptokens = {
+            "IP source": "IP SRC=",
+            "IP dest": "IP DST=",
+            "IP source port": "SPT=",
+            "IP dest port": "DPT="
+        }
+        if entrytype == LogEntryType.UNKNOWN_IP or entrytype == LogEntryType.IP_TRAFFIC_IN or entrytype == LogEntryType.IP_TRAFFIC_OUT:
+            for k, v in iptokens.items():
+                nextidx = str2.find(v, lastidx)
+                if nextidx < 0:
+                    raise errorhandler.LogDatabaseError("{} not found in log entry".format(k))
+                indices.append(nextidx + len(v))
+                lastidx = nextidx
+
+            srcIP = extract_ip(str2, indices[2])
+            dstIP = extract_ip(str2, indices[3])
+            srcPort = str2[indices[4]:].partition(" ")[0]
+            dstPort = str2[indices[5]:]
+        else:
+            srcIP = ""
+            dstIP = ""
+            srcPort = ""
+            dstPort = ""
 
         logdataentry = LogDataEntry(entry_type=entrytype, timestamp=timestamp, srcMAC=srcMAC, dstMAC=dstMAC, srcIP=srcIP, dstIP=dstIP,
                                     srcPort=srcPort, dstPort=dstPort)
@@ -165,6 +179,7 @@ class LogDatabase:
         """
         writes all accumulated log data to the SQL database:
         unknown MACS, unknown IPS, IP traffic log
+        reset all logs
         :return:
         """
         with self.datalock:

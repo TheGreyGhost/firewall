@@ -33,8 +33,8 @@ def initialise(loggername="default", path=DEBUG_LOG_PATH, level=logging.INFO):
     ch = logging.handlers.RotatingFileHandler(filename=path, maxBytes=MAX_LOG_SIZE, backupCount=1)
     ch.setLevel(logging.DEBUG)
 
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                                  datefmt="%Y-%m-%d %H:%M:%S.uuu")
+    formatter = logging.Formatter('%(asctime)s.%(msecs)03d - %(name)s - %(levelname)s - %(message)s',
+                                  datefmt="%Y-%m-%d %H:%M:%S")
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 

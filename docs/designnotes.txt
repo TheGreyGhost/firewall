@@ -105,6 +105,9 @@ UNKNOWN_MACS_LOG (mac, count, timestart, timefinish)
 UNKNOWN_IPS_LOG (ip, count, timestart, timefinish)
 IP_TRAFFIC_IN_LOG (srcIP:port;dstIP:port, count, timestart, timefinish)
 IP_TRAFFIC_OUT_LOG (srcIP:port;dstIP:port, count, timestart, timefinish)
+mac is char(17)
+count is long
+timestart, timefinish is timestamp
 
 
 

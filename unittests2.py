@@ -79,8 +79,8 @@ class MyTestCase(unittest.TestCase):
                                  datetime.datetime(2018, 8, 11, 16, 21, 9),
                                  "38:2c:4a:64:d1:50",
                                  "a4:91:b1:4f:6b:e8",
-                                 "192.168.1.200", "55028",
-                                 "203.47.10.37", "8080"
+                                 "", "",
+                                 "", ""
                                  ),
                 "2019-08-11T18:21:09.503819+09:30 garden kernel: [103105.328637] EBTABLESLOGUIP "
                 "IN=enxa0cec81d71e2    OUT=enxb827eb8cefb8 "
