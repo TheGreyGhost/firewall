@@ -26,16 +26,16 @@ from collections import namedtuple
 import binascii
 import socket
 import re
-from enum import Enum, auto
+from enum import Enum
 import collections
 import threading
 
 
 class LogEntryType(Enum):
-    UNKNOWN_MAC = auto()
-    UNKNOWN_IP = auto()
-    IP_TRAFFIC_IN = auto()
-    IP_TRAFFIC_OUT = auto()
+    UNKNOWN_MAC = 1
+    UNKNOWN_IP = 2
+    IP_TRAFFIC_IN = 3
+    IP_TRAFFIC_OUT = 4
 
 
 LogDataEntry = namedtuple("LogDataEntry", "entry_type timestamp srcMAC dstMAC srcIP srcPort dstIP dstPort")
