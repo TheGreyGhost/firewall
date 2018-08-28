@@ -66,11 +66,11 @@ if __name__ == '__main__':
     if sys.platform.startswith('linux'):  # defaults for CMD line:
         DEBUG_LOG_PATH = r"/var/tap/firewall.log"
         TESTPORT = "3306"
-        INPUT_PIPE = r"/var/tap/firewalllogpipe"
+        INPUT_PIPE = r"/var/tap/ebbridgepipe"
     else:  # defaults for IDE:
         DEBUG_LOG_PATH = r"c:/junk/firewall.log"
         TESTPORT = "8889"
-        INPUT_PIPE = r"c:/junk/firewalllogpipe.txt"
+        INPUT_PIPE = r"c:/junk/ebbridgepipe.txt"
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--debug", help="print debugging information", action="store_true")
