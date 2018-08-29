@@ -36,6 +36,7 @@ class LogEntryType(Enum):
     UNKNOWN_IP = 2
     IP_TRAFFIC_IN = 3
     IP_TRAFFIC_OUT = 4
+    DROP = 5
 
 
 LogDataEntry = namedtuple("LogDataEntry", "entry_type timestamp srcMAC dstMAC srcIP srcPort dstIP dstPort")
@@ -46,7 +47,8 @@ class LogDatabase:
     validpostfixes = {"UMAC " : LogEntryType.UNKNOWN_MAC,
                       "UIP " : LogEntryType.UNKNOWN_IP,
                       "IPOUT" : LogEntryType.IP_TRAFFIC_OUT,
-                      "IPIN" : LogEntryType.IP_TRAFFIC_IN
+                      "IPIN" : LogEntryType.IP_TRAFFIC_IN,
+                      "DROP": LogEntryType.DROP
                       }
     LOGFILE_PREFIX = "EBTABLESLOG"
 
@@ -57,6 +59,7 @@ class LogDatabase:
     unknown_ips = collections.Counter()
     ip_traffic_in = collections.Counter()
     ip_traffic_out = collections.Counter()
+    dropped_traffic = collections.Counter()
     firsttimestamp = None
     lasttimestamp = None
 
@@ -128,7 +131,8 @@ class LogDatabase:
             "IP source port": "SPT=",
             "IP dest port": "DPT="
         }
-        if entrytype == LogEntryType.UNKNOWN_IP or entrytype == LogEntryType.IP_TRAFFIC_IN or entrytype == LogEntryType.IP_TRAFFIC_OUT:
+        if entrytype == LogEntryType.UNKNOWN_IP or entrytype == LogEntryType.IP_TRAFFIC_IN \
+                or entrytype == LogEntryType.IP_TRAFFIC_OUT or entrytype == LogEntryType.DROP:
             for k, v in iptokens.items():
                 nextidx = str2.find(v, lastidx)
                 if nextidx < 0:
@@ -174,6 +178,13 @@ class LogDatabase:
                         logdataentry.dstPort]
                 key = "".join(keys)
                 self.ip_traffic_out[key] += 1
+            elif logdataentry.entry_type == LogEntryType.DROP:
+                keys = [logdataentry.srcIP, ":",
+                        logdataentry.srcPort, ";",
+                        logdataentry.dstIP, ":",
+                        logdataentry.dstPort]
+                key = "".join(keys)
+                self.dropped_traffic[key] += 1
 
     def write_to_database(self):
         """
@@ -194,6 +205,10 @@ class LogDatabase:
 
             self.dbAccess.log_IP_traffic_out(self.ip_traffic_out, self.firsttimestamp, self.lasttimestamp)
             self.ip_traffic_out.clear()
+
+            self.dbAccess.log_dropped_traffic(self.dropped_traffic, self.firsttimestamp, self.lasttimestamp)
+            self.dropped_traffic.clear()
+
 
 def mac_to_bytes(str, start):
     macbytes = binascii.unhexlify(str[start:start+17].replace(':', ''))

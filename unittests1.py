@@ -126,7 +126,8 @@ class MyTestCase(unittest.TestCase):
     def test_ebtables(self):
         with DBaccess(dbpassword="TESTREADONLY", port=testport) as db:
             ebtables = EbTables(db)
-            eblist = ebtables.compilerules()
+            testdate = datetime.datetime.strptime("2018-04-01 03:00:00", "%Y-%m-%d %H:%M:%S")
+            eblist = ebtables.compilerules(testdate)
             self.assertIsNotNone(eblist, "tet1")
 
 if __name__ == '__main__':

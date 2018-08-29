@@ -59,22 +59,39 @@ class DBaccess:
             self.db.close()
 
     def getknown_macs(self):
-        """ returns a list of all
+        """ returns a list of all known MAC addresses on the network
 
-        :return:
+        :return: list of mac addresses in the format 08:60:6e:42:f0:fb
         :raises: DatabaseError
         """
         if self.db is None or self.cursor is None:
             raise DatabaseError("Not connected to a database")
 
-        self.cursor.execute("SELECT MAC FROM qryClientAccess")
+        self.cursor.execute("SELECT MAC FROM clients")
 
-        # if we don't know this MAC, or the device has no owner, use reserved entry in owners table: unknown
         allmacs = self.cursor.fetchall()
         if allmacs is None:
             return None
         allmacslist = [i.MAC for i in allmacs]
         return allmacslist
+
+    def getknown_mac_ips(self):
+        """ returns a list of all known mac+IP addresses on the network
+
+        :return: list of mac addresses with IP in the format 08:60:6e:42:f0:fb=192.168.1.3
+        :raises: DatabaseError
+        """
+        if self.db is None or self.cursor is None:
+            raise DatabaseError("Not connected to a database")
+
+        self.cursor.execute("SELECT MAC, IP4 FROM clients")
+
+        allmacips = self.cursor.fetchall()
+        if allmacips is None:
+            return None
+        allmacipslist = ["{0}={1}".format(i.MAC, i.IP4) for i in allmacips]
+        return allmacipslist
+
 
     def getaccess(self, macaddress, datetimenow):
         """  Returns the current access for the given MAC address at the given time
@@ -201,6 +218,9 @@ class DBaccess:
 
     def log_IP_traffic_out(self, entries, timestart, timefinish):
         self.log_common("ip_traffic_out_log", "ip_src_and_dest", entries, timestart, timefinish)
+
+    def log_dropped_traffic(self, entries, timestart, timefinish):
+        self.log_common("dropped_traffic", "ip_src_and_dest", entries, timestart, timefinish)
 
     def log_common(self, tablename, logfield, entries, timestart, timefinish):
         if self.db is None or self.cursor is None:
